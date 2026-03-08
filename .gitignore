@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+*.log
+chat_logs*.txt
+dist/
+build/

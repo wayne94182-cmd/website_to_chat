@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import DOMPurify from 'dompurify';
 import { v4 as uuidv4 } from 'uuid';
@@ -53,7 +53,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [soundVolume, setSoundVolume] = useState(0.5);
   const [ambientVolume, setAmbientVolume] = useState(0.5);
-  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('chat_theme') || 'modern');
+  const [currentTheme, setCurrentTheme] = useState(() => localStorage.getItem('chat_theme') || 'woodland');
   const [currentAmbient, setCurrentAmbient] = useState(null); // '海島.ogg', '火車.ogg', 等
 
   const lastSoundTimeRef = useRef(0);
@@ -393,11 +393,11 @@ function App() {
       bgClass: "bg-cover bg-center bg-fixed bg-[#fcf8f2]",
       bgImage: "url('/bg_wood_new.png')",
       chatBgClass: "bg-cover bg-center bg-fixed bg-[#fcf8f2]",
-      startBtn: "bg-[url('/button/木質.jpg')] bg-[length:200%] bg-center border-none !shadow-[4px_6px_0px_#2c1a0e] active:translate-y-1 active:translate-x-1 active:!shadow-none text-[#1f1207] text-xl font-extrabold select-none transition-all duration-75 !rounded-[12px] uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(255,255,255,0.4)]",
-      keywordBtn: "bg-[url('/button/木頭2.jpg')] bg-[length:200%] bg-center border-none !shadow-[4px_6px_0px_#2c1a0e] active:translate-y-1 active:translate-x-1 active:!shadow-none text-[#1f1207] font-extrabold transition-all duration-75 !rounded-[12px] drop-shadow-[0_1px_2px_rgba(255,255,255,0.4)]",
+      startBtn: "bg-[url('/button/wood.jpg')] bg-[length:200%] bg-center border-none !shadow-[4px_6px_0px_#2c1a0e] active:translate-y-1 active:translate-x-1 active:!shadow-none text-[#1f1207] text-xl font-extrabold select-none transition-all duration-75 !rounded-[12px] uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(255,255,255,0.4)]",
+      keywordBtn: "bg-[url('/button/wood2.jpg')] bg-[length:200%] bg-center border-none !shadow-[4px_6px_0px_#2c1a0e] active:translate-y-1 active:translate-x-1 active:!shadow-none text-[#1f1207] font-extrabold transition-all duration-75 !rounded-[12px] drop-shadow-[0_1px_2px_rgba(255,255,255,0.4)]",
       textInputBg: "bg-[#4a3018]/90 backdrop-blur-sm border-2 border-[#2c1a0e] focus:border-[#d5a069] text-[#f4e4c1] placeholder-[#d5a069] shadow-[inset_2px_4px_10px_rgba(0,0,0,0.6)]",
-      myMsg: "bg-[url('/button/木質.jpg')] bg-[length:200%] bg-center border-b-4 border-r-2 border-t border-l border-[#3a200d] text-[#1f1207] shadow-[2px_3px_5px_rgba(0,0,0,0.4)] font-bold rounded-[12px]",
-      partnerMsg: "bg-[url('/button/木頭2.jpg')] bg-[length:200%] bg-center border-b-4 border-r-2 border-t border-l border-[#3a200d] text-[#1f1207] shadow-[2px_3px_5px_rgba(0,0,0,0.4)] font-bold rounded-[12px]",
+      myMsg: "bg-[url('/button/wood.jpg')] bg-[length:200%] bg-center border-b-4 border-r-2 border-t border-l border-[#3a200d] text-[#1f1207] shadow-[2px_3px_5px_rgba(0,0,0,0.4)] font-bold rounded-[12px]",
+      partnerMsg: "bg-[url('/button/wood2.jpg')] bg-[length:200%] bg-center border-b-4 border-r-2 border-t border-l border-[#3a200d] text-[#1f1207] shadow-[2px_3px_5px_rgba(0,0,0,0.4)] font-bold rounded-[12px]",
       bottomBar: "bg-[#2c1e14]/90 backdrop-blur-xl border-t border-[#1a0f0a] shadow-[0_-5px_20px_rgba(0,0,0,0.8)]",
       textColor: "text-[#3e1d04] drop-shadow-[0_1px_1px_rgba(255,255,255,0.5)]",
       idleBoxBg: "bg-[#4a3018]/80 backdrop-blur-md border-2 border-[#2c1a0e] shadow-[8px_12px_0px_#2c1a0e] rounded-[15px]",
@@ -419,7 +419,7 @@ function App() {
     }
   };
 
-  const currentSettings = themeStyles[currentTheme] || themeStyles.modern;
+  const currentSettings = themeStyles[currentTheme] || themeStyles.woodland;
 
   if (appState === 'idle' || appState === 'waiting') {
     return (

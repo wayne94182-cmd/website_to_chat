@@ -1,0 +1,50 @@
+﻿  worker: { format: 'iife', plugins: '() => plugins', rollupOption
+s: {} },
+  appType: 'spa',
+  experimental: {
+    importGlobRestoreExtension: false,
+    renderBuiltUrl: undefined,
+    hmrPartialAccept: false
+  },
+  future: undefined,
+  ssr: {
+    target: 'node',
+    optimizeDeps: { esbuildOptions: { preserveSymlinks: false } },
+    resolve: { conditions: undefined, externalConditions: undefine
+d }
+  },
+  dev: {
+    warmup: [],
+    sourcemap: { js: true },
+    sourcemapIgnoreList: [Function: isInNodeModules],
+    preTransformRequests: false,
+    createEnvironment: [Function: defaultCreateDevEnvironment],
+    recoverable: false,
+    moduleRunnerTransform: false
+  },
+  webSocketToken: 'v7GDKDBYLlog',
+  getSortedPlugins: [Function: getSortedPlugins],
+  getSortedPluginHooks: [Function: getSortedPluginHooks],
+  createResolver: [Function: createResolver],
+  fsDenyGlob: [Function: arrayMatcher],
+  safeModulePaths: Set(0) {},
+  Symbol(vite:resolved-config): true
+}
+transforming...
+2026-02-27T08:18:45.534Z vite:resolve [32m0.08ms[39m [36mtailwi
+ndcss[39m -> [2mnull[22m
+[2m[DEBUG][22m Writing debug info to: [2m[34m`[39m[22m[34mC
+:\Users\user\Desktop\web3\website\frontend\tailwindcss-35724.log[
+39m[2m[34m`[39m[22m
+
+
+[2m[62.32ms][22m [@tailwindcss/vite] Generate CSS (build)
+[2m[24.92ms][22m  [2m ??[22mSetup compiler
+[2m[ 4.51ms][22m  [2m ??[22mSetup scanner
+[2m[11.59ms][22m  [2m ??[22mScan for candidates
+[2m[ 3.74ms][22m  [2m ??[22mRegister dependency messages
+[2m[17.01ms][22m  [2m ??[22mBuild CSS
+[2m[ 0.00ms][22m  [2m ??[22mBuild Source Map
+[2m[ 5.24ms][22m [@tailwindcss/vite] Optimize CSS
+
+[32m??[39m 86 modules transformed.

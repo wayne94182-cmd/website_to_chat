@@ -34,28 +34,43 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"], // 若有獨立打包，建議移除 unsafe-inline
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://static.cloudflareinsights.com"], // 允許 Cloudflare Insights 分析腳本
             styleSrc: ["'self'", "'unsafe-inline'"],
-            connectSrc: ["'self'", "wss:", "ws:", "http://localhost:3000"], // 允許 WSS 連線
+            connectSrc: ["'self'", "wss:", "ws:", "http://localhost:3000", "https://cloudflareinsights.com"], // 允許 WSS 連線及 Cloudflare 分析數據傳送
             imgSrc: ["'self'", "data:"],
             mediaSrc: ["'self'"], // 允許播放自己網站的音效檔案
         },
     },
 }));
 
-// [Security 2: REST API] Rate Limiting
-const httpRateLimiter = new RateLimiterMemory({
-    keyPrefix: 'http_limit',
-    points: 10,  // 每秒最多 10 個請求
-    duration: 1, // 1秒
+// [Security 2: REST API] HTTP Flood 防禦 - 雙層速率限制
+// 第一層：每秒突發限制 (防高速 Flood)
+const httpBurstLimiter = new RateLimiterMemory({
+    keyPrefix: 'http_burst',
+    points: 15,   // 每秒最多 15 個請求
+    duration: 1,
+});
+// 第二層：每分鐘總量限制 (防持續性 Flood)
+const httpFloodLimiter = new RateLimiterMemory({
+    keyPrefix: 'http_flood',
+    points: 100,  // 每分鐘最多 100 個請求
+    duration: 60,
 });
 
-app.use((req, res, next) => {
-    // [Security 3] 隱私保護: 將 IP 進行 Hash 後存入 Rate Limiter，不直接保存本機真實 IP
-    const ipHash = crypto.createHash('sha256').update(req.ip).digest('hex');
-    httpRateLimiter.consume(ipHash)
-        .then(() => next())
-        .catch(() => res.status(429).send('Too Many Requests'));
+app.use(async (req, res, next) => {
+    const rawIp = req.headers['cf-connecting-ip'] || req.headers['x-forwarded-for'] || req.ip;
+    const ip = rawIp.split(',')[0].trim();
+    const ipHash = crypto.createHash('sha256').update(ip).digest('hex');
+    try {
+        await httpBurstLimiter.consume(ipHash);
+        await httpFloodLimiter.consume(ipHash);
+        next();
+    } catch (rejRes) {
+        // 回傳 Retry-After 標頭讓正常瀏覽器知道何時可以重試
+        const retryAfter = rejRes.msBeforeNext ? Math.ceil(rejRes.msBeforeNext / 1000) : 60;
+        res.set('Retry-After', String(retryAfter));
+        res.status(429).send('Too Many Requests - 請求過於頻繁，請稍後再試。');
+    }
 });
 
 // [Security 2: Socket.io] 訊息發送頻率限制
@@ -78,6 +93,17 @@ const matchRateLimiter = new RateLimiterMemory({
     points: 30,  // 一分鐘內最多 30 次配對請求
     duration: 60,
 });
+
+// [Security 7] WebSocket 連線頻率限制 (防惡意洗連線數 / Connection Flood)
+const wsConnectLimiter = new RateLimiterMemory({
+    keyPrefix: 'ws_connect',
+    points: 10,   // 同一 IP 每分鐘最多 10 次新連線
+    duration: 60,
+});
+
+// [Security 8] 同一 IP 最大同時連線數追蹤
+const ipConnectionCount = new Map(); // ipHash -> number
+const MAX_CONNECTIONS_PER_IP = 5;
 
 // =========== 核心邏輯區 ===========
 
@@ -189,7 +215,35 @@ const handleRoomClose = (roomId) => {
     roomMap.delete(roomId);
 };
 
-io.on('connection', (socket) => {
+io.on('connection', async (socket) => {
+    // [Security 7] WebSocket 連線頻率限制
+    const connIpHash = getIpHash(socket);
+    try {
+        await wsConnectLimiter.consume(connIpHash);
+    } catch (rejRes) {
+        socket.emit('error', '連線過於頻繁，請稍後再試。');
+        socket.disconnect(true);
+        return;
+    }
+
+    // [Security 8] 同一 IP 同時連線數限制
+    const currentCount = ipConnectionCount.get(connIpHash) || 0;
+    if (currentCount >= MAX_CONNECTIONS_PER_IP) {
+        socket.emit('error', '同一網路的連線數已達上限，請關閉其他分頁後重試。');
+        socket.disconnect(true);
+        return;
+    }
+    ipConnectionCount.set(connIpHash, currentCount + 1);
+
+    // 斷線時減少計數
+    socket.on('disconnect', () => {
+        const count = ipConnectionCount.get(connIpHash) || 1;
+        if (count <= 1) {
+            ipConnectionCount.delete(connIpHash);
+        } else {
+            ipConnectionCount.set(connIpHash, count - 1);
+        }
+    });
     // 註冊與狀態還原
     socket.on('register', (userId) => {
         socket.userId = userId;
